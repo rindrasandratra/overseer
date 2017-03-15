@@ -1,0 +1,34 @@
+//created on: 7 mars 2017
+package rules
+
+//list any import classes here.
+
+import com.capgemini.overseer.entities.*;
+
+//declare any global variables here
+
+
+
+
+rule "est une notice"
+
+    when
+        //conditions
+        logMessage:LogMessage( level contains 'notice' )
+    then
+        //actions
+        System.out.println("got a notice "+ logMessage.getMessageID());
+        System.out.println("message : "+ logMessage.getMessage());
+
+end
+
+rule "not a notice"
+    when
+        //conditions
+        logMessage:LogMessage( level not contains 'notice' )
+    then
+        //actions
+        System.out.println("not a notice "+ logMessage.getMessageID());
+        System.out.println("message : "+ logMessage.getMessage());
+
+end
