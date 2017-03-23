@@ -3,17 +3,28 @@ package com.capgemini.overseer.services;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 
+import com.capgemini.overseer.drools.MasterEngine;
 import com.capgemini.overseer.entities.Rule;
+import com.capgemini.overseer.helpers.ParseRule;
 import com.capgemini.overseer.interfaces.IRuleService;
 
 @Repository
 public class RuleService implements IRuleService {
+	
 
-	public void init() {
+	public Boolean initEngine() {
 		// TODO Auto-generated method stub
-		
+		return MasterEngine.getInstance().initEngine();
+	}
+	
+	public Rule parseRule(String ruleStr){
+		ParseRule parseRule = new ParseRule(ruleStr);
+		Rule rule = parseRule.getRuleObj();
+		return rule;
 	}
 
 	public List<Rule> getAll() {
@@ -28,10 +39,21 @@ public class RuleService implements IRuleService {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	public Boolean addRule(String ruleStr) {
+		return addRule(parseRule(ruleStr));
+	}
 
-	public void create(Rule rule) {
+	public Boolean addRule(Rule rule) {
 		// TODO Auto-generated method stub
-		
+		System.out.println("Inserting a rule:" + rule);
+		if ( MasterEngine.getInstance().addRule(rule)){
+			System.out.println("rule added");
+			fireRule();
+			return true;
+		}
+		System.out.println("rule not added");
+		return false;
 	}
 
 	public void update(Rule rule) {
@@ -39,9 +61,16 @@ public class RuleService implements IRuleService {
 		
 	}
 
-	public void delete(Rule rule) {
+	public void delete(String ruleStr) {
 		// TODO Auto-generated method stub
-		
+		Rule rule = parseRule(ruleStr);
+		System.out.println("delete rule "+ rule);
+	}
+	
+	public void fireRule() {
+
+		ConsumerMessageService consumerMessageService = new ConsumerMessageService();
+		consumerMessageService.Execute();
 	}
 
 

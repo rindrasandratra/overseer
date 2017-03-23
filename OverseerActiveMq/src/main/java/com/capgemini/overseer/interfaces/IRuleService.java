@@ -6,15 +6,17 @@ import com.capgemini.overseer.entities.Rule;
 
 public interface IRuleService {
 	
-	void init();
+	Boolean initEngine();
 	
 	List<Rule> getAll();
 
 	Rule get(Integer id);
+	
+	Boolean addRule(String ruleStr);
 
-	void create(Rule rule);
+	Boolean addRule(Rule rule);
 
 	void update(Rule rule);
 
-	void delete(Rule rule);
+	void delete(String rule);
 }

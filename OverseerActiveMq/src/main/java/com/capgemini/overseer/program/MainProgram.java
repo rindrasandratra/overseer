@@ -1,6 +1,6 @@
 package com.capgemini.overseer.program;
 
-import com.capgemini.overseer.drools.services.ConsumerMessageService;
+import com.capgemini.overseer.services.ConsumerMessageService;
 
 public class MainProgram {
 

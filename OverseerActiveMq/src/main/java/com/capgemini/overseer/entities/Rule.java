@@ -1,10 +1,12 @@
 package com.capgemini.overseer.entities;
 
+import com.capgemini.overseer.helpers.ParseRule;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Rule {
 	Integer id;
+	String packageName;
 	String name;
 	String content;
 
@@ -30,6 +32,14 @@ public class Rule {
 		this.name = name;
 		this.content = content;
 	}
+	
+	public Rule(String ruleStr){
+		ParseRule parseRule = new ParseRule(ruleStr);
+		this.id = parseRule.getRuleObj().getId();
+		this.name = parseRule.getRuleObj().getName();
+		this.content = parseRule.getRuleObj().getContent();
+		this.packageName = parseRule.getRuleObj().getPackageName();
+	}
 
 	public Rule() {
 		// TODO Auto-generated constructor stub
@@ -41,6 +51,15 @@ public class Rule {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+
+	public String getPackageName() {
+		return packageName;
+	}
+
+	public void setPackageName(String packageName) {
+		this.packageName = packageName;
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package com.capgemini.overseer.proxies;
 import java.util.Base64;
 import java.util.List;
 
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,22 +12,27 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.capgemini.overseer.config.UrlConfig;
 import com.capgemini.overseer.entities.Rule;
-import com.capgemini.overseer.helpers.ParseRule;
 import com.capgemini.overseer.services.RuleService;
 
 @RestController
 public class RestService {
+	
+	String urlApiRules = UrlConfig.getInstance().getProperty("urlApiRules");
+	String urlApiAlerts = UrlConfig.getInstance().getProperty("urlApiAlerts");
 
 	@Autowired
 	RuleService ruleService;
 
 	@RequestMapping(value = "/addRule")
-	public void addRule(@RequestBody String ruleStr){
-		ParseRule parseRule = new ParseRule(ruleStr);
-		Rule rule = parseRule.getRuleObj();
-		System.out.println("Inserting a rule:" + rule);
-		ruleService.create(rule);
+	public Boolean addRule(@RequestBody String ruleStr) {
+		return ruleService.addRule(ruleStr);
+	}
+
+	@RequestMapping(value = "/fire")
+	public void fireRule() {
+		ruleService.fireRule();
 	}
 
 	@RequestMapping(value = "/rule")
@@ -38,14 +44,33 @@ public class RestService {
 		return new ResponseEntity<List<Rule>>(rules, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/init")
-	public void init() {
+	@RequestMapping(value = "/remove")
+	public void removeRule(@RequestBody String ruleStr) {
+		ruleService.delete(ruleStr);
+	}
+
+	@RequestMapping(value = "/")
+	public Boolean init() {
 		RestTemplate restTemplate = new RestTemplate();
-		String url = "http://overseer/api/rules/";
-		String url_arg = "http://localhost:8080/rest-ws/addRule";
-		url += Base64.getUrlEncoder().encodeToString(url_arg.getBytes());
-		System.out.println("url = " +url);
-		String result = restTemplate.getForObject(url, String.class);
-		System.out.println(result);
+		String urlApiAddRule = UrlConfig.getInstance().getProperty("urlApiAddRule");
+		String urlAPI = urlApiRules + Base64.getUrlEncoder().encodeToString(urlApiAddRule.getBytes());
+		String result = restTemplate.getForObject(urlAPI, String.class);
+		System.out.println("result" + result);
+		if (result.compareTo("\"ok\"") == 0) {
+			return ruleService.initEngine();
+		} else {
+			return false;
+		}
+	}
+
+	public void sendNotification(JSONObject responseJSON) {
+		try {
+			System.out.println("send notif");
+			RestTemplate restTemplate = new RestTemplate();
+			String result = restTemplate.postForObject(urlApiAlerts, responseJSON, String.class);
+			System.out.println(result);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

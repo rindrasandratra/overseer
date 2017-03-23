@@ -1,5 +1,6 @@
 package com.capgemini.overseer.drools.sessions;
 
+import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
@@ -9,18 +10,18 @@ public class DroolsSession {
 	private KieSession ksession;
 	KieServices kieServices;
 	KieContainer kcontainer;
+	KieBase kieBase;
 
 	private DroolsSession() {
 		kieServices = KieServices.Factory.get();
 		kcontainer = kieServices.getKieClasspathContainer();
 		ksession = kcontainer.newKieSession("ksession-rules");
+		kieBase = kcontainer.getKieBase();
 	}
 
-	public void execute_rule() {
+	public void executeRule() {
 		ksession.fireAllRules();
 	}
-	
-	
 
 	public KieServices getKieServices() {
 		return kieServices;
@@ -48,5 +49,4 @@ public class DroolsSession {
 		}
 		return instance;
 	}
-
 }
