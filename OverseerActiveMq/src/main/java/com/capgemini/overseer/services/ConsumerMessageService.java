@@ -38,10 +38,6 @@ public class ConsumerMessageService {
 			CreateConnectionFactory();
 			CreateDestinationQueue();
 			CreateMessageConsumer();
-			// ProcessMessage();
-			/*
-			 * consumer.close(); connection.close();
-			 */
 		} catch (JMSException e) {
 			e.printStackTrace();
 		}
@@ -62,7 +58,6 @@ public class ConsumerMessageService {
 
 	public void CreateMessageConsumer() throws JMSException {
 		if (consumer == null) {
-			// MessageConsumer is used for receiving (consuming) messages
 			consumer = session.createConsumer(destination);
 			System.out.println("createConsumer");
 			consumer.setMessageListener(new MessageJMSListner());
