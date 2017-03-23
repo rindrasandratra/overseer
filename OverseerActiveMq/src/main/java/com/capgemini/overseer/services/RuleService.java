@@ -3,10 +3,7 @@ package com.capgemini.overseer.services;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
-
 import com.capgemini.overseer.drools.MasterEngine;
 import com.capgemini.overseer.entities.Rule;
 import com.capgemini.overseer.helpers.ParseRule;
@@ -68,9 +65,7 @@ public class RuleService implements IRuleService {
 	}
 	
 	public void fireRule() {
-
-		ConsumerMessageService consumerMessageService = new ConsumerMessageService();
-		consumerMessageService.Execute();
+		ConsumerMessageService.getInstance().Execute();
 	}
 
 
