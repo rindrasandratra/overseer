@@ -32,7 +32,7 @@ public class RestService {
 
 	@RequestMapping(value = "/fire")
 	public void fireRule() {
-		ruleService.fireRule();
+		ruleService.executeAllRulesToLog();
 	}
 
 	@RequestMapping(value = "/rule")

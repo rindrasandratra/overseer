@@ -43,7 +43,7 @@ public class ParseRule {
 	}
 	
 	public void setRuleNotification(){
-		String strCreateNotif = "Response response = new Response("+String.valueOf(ruleObj.getId())+",logMessage.getMessage());";
+		String strCreateNotif = "";// "Response response = new Response("+String.valueOf(ruleObj.getId())+",logMessage.getMessage());";
 		int index = ruleObj.getContent().indexOf("then") + "then".length();
 		String ruleContent = ruleObj.getContent().substring(0, index);
 		ruleContent += "\n"+strCreateNotif +"\n"+ ruleObj.getContent().substring(index);

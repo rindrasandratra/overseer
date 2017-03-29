@@ -15,6 +15,7 @@ public class RuleService implements IRuleService {
 
 	public Boolean initEngine() {
 		// TODO Auto-generated method stub
+		System.out.println("master engine started");
 		return MasterEngine.getInstance().initEngine();
 	}
 	
@@ -46,7 +47,7 @@ public class RuleService implements IRuleService {
 		System.out.println("Inserting a rule:" + rule);
 		if ( MasterEngine.getInstance().addRule(rule)){
 			System.out.println("rule added");
-			fireRule();
+			executeAllRulesToLog();
 			return true;
 		}
 		System.out.println("rule not added");
@@ -64,7 +65,7 @@ public class RuleService implements IRuleService {
 		System.out.println("delete rule "+ rule);
 	}
 	
-	public void fireRule() {
+	public void executeAllRulesToLog() {
 		ConsumerMessageService.getInstance().Execute();
 	}
 

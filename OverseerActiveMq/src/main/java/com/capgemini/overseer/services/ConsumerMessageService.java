@@ -53,7 +53,7 @@ public class ConsumerMessageService {
 	}
 
 	public void CreateDestinationQueue() throws JMSException {
-		destination = session.createQueue(queue_name);
+			destination = session.createQueue(queue_name);
 	}
 
 	public void CreateMessageConsumer() throws JMSException {
