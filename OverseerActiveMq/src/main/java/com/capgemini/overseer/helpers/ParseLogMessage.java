@@ -13,6 +13,7 @@ public class ParseLogMessage {
 	String StrLogMessage;
 	LogMessage logMessage;
 	TextMessage textMessage;
+	DateHelper dateHelper = new DateHelper();
 	
 	
 	public ParseLogMessage(TextMessage textMessage) {
@@ -46,6 +47,7 @@ public class ParseLogMessage {
 			logMessage.setMessage((String) jsonObject.get("message"));
 			logMessage.setType((String) jsonObject.get("type"));
 			logMessage.setCode_erreur((String) jsonObject.get("code_erreur"));
+			logMessage.setCreationDate(dateHelper.convertStringToTimestamp(logMessage.getTemps()));
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

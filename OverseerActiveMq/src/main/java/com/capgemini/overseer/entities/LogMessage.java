@@ -1,5 +1,7 @@
 package com.capgemini.overseer.entities;
 
+import java.sql.Timestamp;
+
 public class LogMessage {
 	String messageID;
 	String date;
@@ -12,6 +14,7 @@ public class LogMessage {
 	String message;
 	String type;
 	String code_erreur;
+	Timestamp creationDate;
 	
 	
 	public LogMessage() {
@@ -102,8 +105,19 @@ public class LogMessage {
 				"\npid=" + pid + 
 				"\nsource=" + source + 
 				"\nmessage=" + message + 
-				"\ntype=" + type
+				"\ntype=" + type +
+				"\ntimestamp=" + creationDate
 				+ "\ncode_erreur=" + code_erreur;
+	}
+
+
+	public Timestamp getCreationDate() {
+		return creationDate;
+	}
+
+
+	public void setCreationDate(Timestamp timestamp) {
+		this.creationDate = timestamp;
 	}
 	
 	/* EXEMPLE

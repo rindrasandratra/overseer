@@ -18,9 +18,21 @@ import com.capgemini.overseer.services.RuleService;
 
 @RestController
 public class RestService {
-	
-	String urlApiRules = UrlConfig.getInstance().getProperty("urlApiRules");
-	String urlApiAlerts = UrlConfig.getInstance().getProperty("urlApiAlerts");
+
+	String urlApiRules;
+	String urlApiAlerts;
+	String urlApiAddRule;
+
+	public RestService() {
+		super();
+		urlApiRules = UrlConfig.getInstance().getProperty("urlApiRules");
+		urlApiAlerts = UrlConfig.getInstance().getProperty("urlApiAlerts");
+		urlApiAddRule = UrlConfig.getInstance().getProperty("urlApiAddRule");
+
+//		urlApiRules = "http://overseer/api/rules/";
+//		urlApiAlerts = "http://overseer/api/alerts/";
+//		urlApiAddRule = "http://localhost:8080/rest-ws/addRule";
+	}
 
 	@Autowired
 	RuleService ruleService;
@@ -52,7 +64,6 @@ public class RestService {
 	@RequestMapping(value = "/")
 	public Boolean init() {
 		RestTemplate restTemplate = new RestTemplate();
-		String urlApiAddRule = UrlConfig.getInstance().getProperty("urlApiAddRule");
 		String urlAPI = urlApiRules + Base64.getUrlEncoder().encodeToString(urlApiAddRule.getBytes());
 		String result = restTemplate.getForObject(urlAPI, String.class);
 		System.out.println("result" + result);

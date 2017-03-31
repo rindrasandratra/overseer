@@ -7,7 +7,7 @@ import java.util.Properties;
 
 public class UrlConfig {
 	public static UrlConfig instance;
-	String configfilepath = "config.properties";
+	String configfilepath = "config/config.properties";
 	Properties properties = new Properties();
 	
 	public static UrlConfig getInstance() {
