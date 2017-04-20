@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.drools.definition.rule.Rule;
 import org.drools.event.rule.AfterActivationFiredEvent;
+import org.drools.event.rule.BeforeActivationFiredEvent;
 import org.drools.event.rule.DefaultAgendaEventListener;
 import org.drools.runtime.ObjectFilter;
 
@@ -24,6 +25,12 @@ public class TrackingAgendaListnerForStateLessSession extends DefaultAgendaEvent
 				MasterEngine.getInstance().addLogToStateFulSession(logMessage);
 			}
 		}
+	}
+	
+	@Override
+	public void beforeActivationFired(BeforeActivationFiredEvent event) {
+		Rule rule = event.getActivation().getRule();
+		System.out.println("Rule beforeActivationFired(BeforeActivationFiredEvent event) " + rule.getName());
 	}
 
 	public Boolean checkIfFactIsAlreadyInSession(final LogMessage instance) {

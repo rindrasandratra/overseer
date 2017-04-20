@@ -11,8 +11,8 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import com.capgemini.overseer.entities.MessageJMSListner;
 
-public class ConsumerMessageService {
-	public static ConsumerMessageService instance;
+public final class ConsumerMessageService {
+	public static final ConsumerMessageService instance = new ConsumerMessageService();
 	Session session;
 	ConnectionFactory connectionFactory;
 	static String url = ActiveMQConnection.DEFAULT_BROKER_URL;
@@ -23,43 +23,42 @@ public class ConsumerMessageService {
 	MessageConsumer consumer;
 
 	private ConsumerMessageService() {
-		super();
+	}
+
+	public void init(){
+		if (consumer == null){
+			try {
+				CreateConnectionFactory();
+				CreateDestinationQueue();
+				CreateMessageConsumer();
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public static ConsumerMessageService getInstance() {
-		if (instance == null) {
-			instance = new ConsumerMessageService();
-		}
 		return instance;
 	}
 
-	public void Execute() {
-		try {
-			CreateConnectionFactory();
-			CreateDestinationQueue();
-			CreateMessageConsumer();
-		} catch (JMSException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void CreateConnectionFactory() throws JMSException {
-		if (connection == null) {
+	private void CreateConnectionFactory() throws JMSException {
+		if (connection == null){
 			connectionFactory = new ActiveMQConnectionFactory(url);
 			connection = connectionFactory.createConnection();
 			connection.start();
-			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 		}
+		if (session == null)
+			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 	}
 
-	public void CreateDestinationQueue() throws JMSException {
+	private void CreateDestinationQueue() throws JMSException {
+		if (destination == null)
 			destination = session.createQueue(queue_name);
 	}
 
-	public void CreateMessageConsumer() throws JMSException {
-		if (consumer == null) {
+	private void CreateMessageConsumer() throws JMSException {
+		if (consumer == null){
 			consumer = session.createConsumer(destination);
-			System.out.println("createConsumer");
 			consumer.setMessageListener(new MessageJMSListner());
 			System.out.println("Consumer created");
 		}

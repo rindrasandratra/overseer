@@ -16,6 +16,7 @@ public class RuleService implements IRuleService {
 	public Boolean initEngine() {
 		// TODO Auto-generated method stub
 		System.out.println("master engine started");
+		System.out.println("MasterEngine.getInstance() " + MasterEngine.getInstance());
 		return MasterEngine.getInstance().initEngine();
 	}
 	
@@ -26,10 +27,7 @@ public class RuleService implements IRuleService {
 	}
 
 	public List<Rule> getAll() {
-		// TODO Auto-generated method stub
 		List<Rule> rules = new ArrayList<Rule>();
-		rules.add(new Rule(1,"name1","test1"));
-		rules.add(new Rule(2,"name2","test2"));
 		return rules;
 	}
 
@@ -44,13 +42,11 @@ public class RuleService implements IRuleService {
 
 	public Boolean addRule(Rule rule) {
 		// TODO Auto-generated method stub
-		System.out.println("Inserting a rule:" + rule);
 		if ( MasterEngine.getInstance().addRule(rule)){
-			System.out.println("rule added");
-			executeAllRulesToLog();
+			System.out.println("rule added : "+ rule.getName() );
 			return true;
 		}
-		System.out.println("rule not added");
+		System.out.println("rule not added : "+ rule.getName() );
 		return false;
 	}
 
@@ -65,9 +61,6 @@ public class RuleService implements IRuleService {
 		System.out.println("delete rule "+ rule);
 	}
 	
-	public void executeAllRulesToLog() {
-		ConsumerMessageService.getInstance().Execute();
-	}
 
 
 }

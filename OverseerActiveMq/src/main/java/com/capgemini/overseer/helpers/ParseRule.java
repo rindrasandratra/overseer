@@ -26,9 +26,9 @@ public class ParseRule {
 			String id = String.valueOf(jsonObject.get("Id"));
 			ruleObj.setId(Integer.valueOf(id));
 			ruleObj.setName((String) jsonObject.get("Name"));
+			ruleObj.setIsStateful((Boolean)jsonObject.get("isStateful"));
 			setContentRule((String) jsonObject.get("Content"));
 			SetPackageName();
-			setRuleNotification();
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -40,18 +40,8 @@ public class ParseRule {
 	}
 	
 	public void SetPackageName(){
-		System.out.println("rule : "+ruleObj.getContent());
 		String sbstr = ruleObj.getContent().substring("package".length(), ruleObj.getContent().indexOf("\n"));
-		System.out.println("res : "+ sbstr);
 		ruleObj.setPackageName(sbstr.trim());
-	}
-	
-	public void setRuleNotification(){
-		String strCreateNotif = "";// "Response response = new Response("+String.valueOf(ruleObj.getId())+",logMessage.getMessage());";
-		int index = ruleObj.getContent().indexOf("then") + "then".length();
-		String ruleContent = ruleObj.getContent().substring(0, index);
-		ruleContent += "\n"+strCreateNotif +"\n"+ ruleObj.getContent().substring(index);
-		ruleObj.setContent(ruleContent);
 	}
 	
 	public String getRuleStr() {

@@ -2,6 +2,8 @@ package com.capgemini.overseer.drools;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.drools.KnowledgeBase;
@@ -12,124 +14,160 @@ import org.drools.builder.KnowledgeBuilderFactory;
 import org.drools.builder.ResourceType;
 import org.drools.conf.EventProcessingOption;
 import org.drools.core.time.SessionPseudoClock;
-import org.drools.event.rule.DebugAgendaEventListener;
-import org.drools.event.rule.DebugWorkingMemoryEventListener;
+import org.drools.definition.KnowledgePackage;
 import org.drools.io.Resource;
 import org.drools.io.ResourceFactory;
-import org.drools.logger.KnowledgeRuntimeLogger;
-import org.drools.logger.KnowledgeRuntimeLoggerFactory;
 import org.drools.runtime.KnowledgeSessionConfiguration;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.StatelessKnowledgeSession;
 import org.drools.runtime.conf.ClockTypeOption;
 
 import com.capgemini.overseer.entities.LogMessage;
+import com.capgemini.overseer.entities.Response;
 import com.capgemini.overseer.entities.Rule;
+import com.capgemini.overseer.services.ConsumerMessageService;
 
-public class MasterEngine {
+public final class MasterEngine{
 
-	public static MasterEngine instance;
-	private KnowledgeBuilder kbuilderStateful;
-	private KnowledgeBase kbaseStateful;
-	private KnowledgeBuilder kbuilderStateless;
-	private KnowledgeBase kbaseStateless;
-	private StatefulKnowledgeSession statefulSession;
-	private StatelessKnowledgeSession statelessSession;
-	KnowledgeBaseConfiguration config;
-	KnowledgeRuntimeLogger loggerstateful;
-	KnowledgeSessionConfiguration configSession;
+	static final MasterEngine instance = new MasterEngine();
+	static final KnowledgeBuilder kbuilderStateful = KnowledgeBuilderFactory.newKnowledgeBuilder();
+	static KnowledgeBase kbaseStateful;
+	static final KnowledgeBuilder kbuilderStateless = KnowledgeBuilderFactory.newKnowledgeBuilder();
+	static final KnowledgeBase kbaseStateless = KnowledgeBaseFactory.newKnowledgeBase();
+	StatefulKnowledgeSession statefulSession;
+	StatelessKnowledgeSession statelessSession;
+	KnowledgeBaseConfiguration  config = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+	KnowledgeSessionConfiguration configSession = KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
 	SessionPseudoClock clock;
+	CountDownLatch latch = new CountDownLatch(1);
+	private Boolean isStarted = false;
 
 	public StatefulKnowledgeSession getStatefulSession() {
 		return statefulSession;
 	}
 
-	public StatelessKnowledgeSession getStatelessSession() {
-		return statelessSession;
-	}
-
-	public void executeRule() {
+	public void execute(){
 		statefulSession.fireAllRules();
 	}
 
 	private MasterEngine() {
-		config = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
 		config.setOption(EventProcessingOption.STREAM);
-		kbuilderStateful = KnowledgeBuilderFactory.newKnowledgeBuilder();
-		kbuilderStateless = KnowledgeBuilderFactory.newKnowledgeBuilder();
 		kbaseStateful = KnowledgeBaseFactory.newKnowledgeBase(config);
-		kbaseStateless = KnowledgeBaseFactory.newKnowledgeBase();
-		configSession = KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
 		configSession.setOption( ClockTypeOption.get("pseudo") );
 	}
 
 	public static MasterEngine getInstance() {
-		if (instance == null) {
-			instance = new MasterEngine();
-		}
 		return instance;
 	}
 
+	public Boolean getIsStarted() {
+		return isStarted;
+	}
+
 	public Boolean addRule(Rule rule) {
-		return (addRuleToStateFulSession(rule) && addRuleToStateLessSession(rule));
+
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		if (rule.getIsStateful())
+			return addRuleToStateFulSession(rule) ;
+		else
+			return addRuleToStateLessSession(rule);
 	}
 
 	public void addLogToStatelessSession(LogMessage logMessage) {
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		System.out.println("log added to stateless session" + logMessage.getMessageID());
 		statelessSession.execute(logMessage);
 	}
 
 	public void addLogToStateFulSession(LogMessage logMessage) {
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		System.out.println("log added to stateful session" + logMessage.getMessageID());
 		statefulSession.insert(logMessage);
 		clock.advanceTime(logMessage.getCreationDate().getTime() - clock.getCurrentTime(), TimeUnit.MILLISECONDS);
-		executeRule();
+		statefulSession.fireAllRules();
 	}
 
 	public Boolean initEngine() {
 		kbuilderStateless.add(ResourceFactory.newClassPathResource("rules/evaluation_level.drl"), ResourceType.DRL);
-		return (restartStatelessSesstion() && restartStateFulSesstion());
+
+		statelessSession = kbaseStateless.newStatelessKnowledgeSession();
+		statelessSession.addEventListener(new TrackingAgendaListnerForStateLessSession());
+
+		statefulSession = kbaseStateful.newStatefulKnowledgeSession(configSession,null);
+		statefulSession.addEventListener(new TrackingAgendaListnerForStateFulSession());
+		clock = statefulSession.getSessionClock();
+		latch.countDown();
+
+		ConsumerMessageService.getInstance().init();
+		return true;
 	}
 
-	public Boolean addRuleToStateLessSession(Rule rule) {
+	public synchronized Boolean addRuleToStateLessSession(Rule rule) {
+		removeExistantRuleInStatelessSession(rule);
 		Resource myRule = ResourceFactory.newReaderResource((Reader) new StringReader(rule.getContent()));
+		System.out.println("rule to inject in stateless : "+ rule.getName());
 		kbuilderStateless.add(myRule, ResourceType.DRL);
-		return restartStatelessSesstion();
-	}
 
-	public Boolean addRuleToStateFulSession(Rule rule) {
-		Resource myRule = ResourceFactory.newReaderResource((Reader) new StringReader(rule.getContent()));
-		kbuilderStateful.add(myRule, ResourceType.DRL);
-		return restartStateFulSesstion();
-	}
-
-	public Boolean restartStatelessSesstion() {
 		if (kbuilderStateless.hasErrors()) {
 			System.out.println(kbuilderStateless.getErrors());
 			return false;
 		}
 		kbaseStateless.addKnowledgePackages(kbuilderStateless.getKnowledgePackages());
-		statelessSession = kbaseStateless.newStatelessKnowledgeSession();
-		statelessSession.addEventListener(new TrackingAgendaListnerForStateLessSession());
 		return true;
 	}
 
-	public Boolean restartStateFulSesstion() {
+
+	public synchronized Boolean addRuleToStateFulSession(Rule rule) {
+		removeExistantRuleInStatefulSession(rule);
+		Resource myRule = ResourceFactory.newReaderResource((Reader) new StringReader(rule.getContent()));
+		System.out.println("rule to inject in stateful : "+ rule.getName());
+		kbuilderStateful.add(myRule, ResourceType.DRL);
 		if (kbuilderStateful.hasErrors()) {
-			System.out.println(kbuilderStateful.getErrors());
+			System.err.println(kbuilderStateful.getErrors());
 			return false;
 		}
-		kbaseStateful.addKnowledgePackages(kbuilderStateful.getKnowledgePackages());
-		statefulSession = kbaseStateful.newStatefulKnowledgeSession(configSession,null);
-		statefulSession.addEventListener(new TrackingAgendaListnerForStateFulSession());
-//		statefulSession.addEventListener(new DebugWorkingMemoryEventListener());
-//		statefulSession.addEventListener(new DebugAgendaEventListener());
-		loggerstateful = KnowledgeRuntimeLoggerFactory.newThreadedFileLogger(statefulSession, "C:/Workspace/logStatefulSession",10000);
-		clock = statefulSession.getSessionClock();
+		statefulSession.getKnowledgeBase().addKnowledgePackages(kbuilderStateful.getKnowledgePackages());
 		return true;
 	}
 
-	public void removeRule(Rule rule) {
-		kbaseStateful.removeRule(rule.getPackageName(), rule.getName());
+	public void removeExistantRuleInStatefulSession(Rule rule){
+		for (KnowledgePackage knowledgePackage : statefulSession.getKnowledgeBase().getKnowledgePackages()) {
+			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
+				if (rule_.getName().equals(rule.getName())){
+					statefulSession.getKnowledgeBase().removeRule(knowledgePackage.getName(), rule.getName());
+					return;
+				}
+			}
+		}
 	}
+	
+	public void removeExistantRuleInStatelessSession(Rule rule){
+		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
+			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
+				if (rule_.getName().equals(rule.getName())){
+					kbaseStateless.removeRule(knowledgePackage.getName(), rule.getName());
+					return;
+				}
+			}
+		}
+	}
+
+
+	public void removeRule(Rule rule) {
+		removeExistantRuleInStatefulSession(rule);
+		removeExistantRuleInStatelessSession(rule);
+	}
+
 }

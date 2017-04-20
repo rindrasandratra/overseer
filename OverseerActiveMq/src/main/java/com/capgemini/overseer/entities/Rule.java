@@ -9,6 +9,7 @@ public class Rule {
 	String packageName;
 	String name;
 	String content;
+	Boolean isStateful;
 
 	public Integer getId() {
 		return id;
@@ -54,6 +55,14 @@ public class Rule {
 	}
 	
 
+	public Boolean getIsStateful() {
+		return isStateful;
+	}
+
+	public void setIsStateful(Boolean isStateful) {
+		this.isStateful = isStateful;
+	}
+
 	public String getPackageName() {
 		return packageName;
 	}
@@ -61,9 +70,10 @@ public class Rule {
 	public void setPackageName(String packageName) {
 		this.packageName = packageName;
 	}
-
+	
 	@Override
 	public String toString() {
-		return "Rule [Id=" + id + ", Name=" + name + ", Content=" + content + "]";
+		return "Rule [id=" + id + ", packageName=" + packageName + ", name=" + name + "\n content=" + content
+				+ "\n isStateful=" + isStateful + "]";
 	}
 }

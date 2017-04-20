@@ -42,11 +42,6 @@ public class RestService {
 		return ruleService.addRule(ruleStr);
 	}
 
-	@RequestMapping(value = "/fire")
-	public void fireRule() {
-		ruleService.executeAllRulesToLog();
-	}
-
 	@RequestMapping(value = "/rule")
 	public ResponseEntity<List<Rule>> listAllRules() {
 		List<Rule> rules = ruleService.getAll();

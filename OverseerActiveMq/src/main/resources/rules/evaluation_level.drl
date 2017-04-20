@@ -20,11 +20,10 @@ rule "not a notice"
     when
         //conditions
         logMessage:LogMessage( level contains 'notice' )
-        $total: Number (intValue > 3) from accumulate ( LogMessage( level contains 'notice' ), count(1))
+       // $total: Number (intValue > 3) from accumulate ( LogMessage( level contains 'notice' ), count(1))
     then
         //actions
-        System.out.println("3 not notice contained");
-        System.out.println("a notice "+ logMessage.getMessageID());
+        System.out.println("a notice in eval drl"+ logMessage.getMessageID());
         System.out.println("message : "+ logMessage.getMessage());
 
 end
