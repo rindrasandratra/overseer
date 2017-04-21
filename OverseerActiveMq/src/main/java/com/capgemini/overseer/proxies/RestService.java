@@ -21,17 +21,11 @@ public class RestService {
 
 	String urlApiRules;
 	String urlApiAlerts;
-	String urlApiAddRule;
 
 	public RestService() {
 		super();
 		urlApiRules = UrlConfig.getInstance().getProperty("urlApiRules");
 		urlApiAlerts = UrlConfig.getInstance().getProperty("urlApiAlerts");
-		urlApiAddRule = UrlConfig.getInstance().getProperty("urlApiAddRule");
-
-//		urlApiRules = "http://overseer/api/rules/";
-//		urlApiAlerts = "http://overseer/api/alerts/";
-//		urlApiAddRule = "http://localhost:8080/rest-ws/addRule";
 	}
 
 	@Autowired
@@ -51,16 +45,15 @@ public class RestService {
 		return new ResponseEntity<List<Rule>>(rules, HttpStatus.OK);
 	}
 
-	@RequestMapping(value = "/remove")
-	public void removeRule(@RequestBody String ruleStr) {
-		ruleService.delete(ruleStr);
+	@RequestMapping(value = "/removeRule")
+	public Boolean removeRule(@RequestBody String ruleStr) {
+		return ruleService.delete(ruleStr);
 	}
-
+	
 	@RequestMapping(value = "/")
 	public Boolean init() {
 		RestTemplate restTemplate = new RestTemplate();
-		String urlAPI = urlApiRules + Base64.getUrlEncoder().encodeToString(urlApiAddRule.getBytes());
-		String result = restTemplate.getForObject(urlAPI, String.class);
+		String result = restTemplate.postForObject(urlApiRules, ruleService.encodeUrlData(), String.class);
 		System.out.println("result" + result);
 		if (result.compareTo("\"ok\"") == 0) {
 			return ruleService.initEngine();
@@ -68,7 +61,7 @@ public class RestService {
 			return false;
 		}
 	}
-
+	
 	public void sendNotification(JSONObject responseJSON) {
 		try {
 			System.out.println("send notif");
@@ -79,4 +72,6 @@ public class RestService {
 			e.printStackTrace();
 		}
 	}
+	
+
 }

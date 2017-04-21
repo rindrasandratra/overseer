@@ -18,5 +18,5 @@ public interface IRuleService {
 
 	void update(Rule rule);
 
-	void delete(String rule);
+	Boolean delete(String rule);
 }

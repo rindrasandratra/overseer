@@ -35,7 +35,7 @@ public final class MasterEngine{
 	static final KnowledgeBuilder kbuilderStateless = KnowledgeBuilderFactory.newKnowledgeBuilder();
 	static final KnowledgeBase kbaseStateless = KnowledgeBaseFactory.newKnowledgeBase();
 	StatefulKnowledgeSession statefulSession;
-	StatelessKnowledgeSession statelessSession;
+	static final StatelessKnowledgeSession statelessSession = kbaseStateless.newStatelessKnowledgeSession();
 	KnowledgeBaseConfiguration  config = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
 	KnowledgeSessionConfiguration configSession = KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
 	SessionPseudoClock clock;
@@ -102,7 +102,7 @@ public final class MasterEngine{
 	public Boolean initEngine() {
 		kbuilderStateless.add(ResourceFactory.newClassPathResource("rules/evaluation_level.drl"), ResourceType.DRL);
 
-		statelessSession = kbaseStateless.newStatelessKnowledgeSession();
+		//statelessSession = kbaseStateless.newStatelessKnowledgeSession();
 		statelessSession.addEventListener(new TrackingAgendaListnerForStateLessSession());
 
 		statefulSession = kbaseStateful.newStatefulKnowledgeSession(configSession,null);
@@ -141,33 +141,40 @@ public final class MasterEngine{
 		statefulSession.getKnowledgeBase().addKnowledgePackages(kbuilderStateful.getKnowledgePackages());
 		return true;
 	}
-
-	public void removeExistantRuleInStatefulSession(Rule rule){
+	
+	private Boolean removeExistantRuleInStatefulSession(Rule rule){
 		for (KnowledgePackage knowledgePackage : statefulSession.getKnowledgeBase().getKnowledgePackages()) {
 			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
 				if (rule_.getName().equals(rule.getName())){
 					statefulSession.getKnowledgeBase().removeRule(knowledgePackage.getName(), rule.getName());
-					return;
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 	
-	public void removeExistantRuleInStatelessSession(Rule rule){
+	private Boolean removeExistantRuleInStatelessSession(Rule rule){
 		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
 			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
 				if (rule_.getName().equals(rule.getName())){
 					kbaseStateless.removeRule(knowledgePackage.getName(), rule.getName());
-					return;
+					//statelessSession.
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 
 
-	public void removeRule(Rule rule) {
-		removeExistantRuleInStatefulSession(rule);
-		removeExistantRuleInStatelessSession(rule);
+	synchronized public Boolean removeRule(Rule rule) {
+		if (removeExistantRuleInStatefulSession(rule) || removeExistantRuleInStatelessSession(rule)){
+			System.out.println("########## La regle : "+ rule.getName() + " a ete supprimee ##########");
+			return true;
+		}
+		System.out.println("########## La regle : "+ rule.getName() + " n'a pas ete supprimee ##########");
+		return false;
 	}
 
 }

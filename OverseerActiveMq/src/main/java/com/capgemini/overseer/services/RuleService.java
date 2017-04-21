@@ -3,7 +3,10 @@ package com.capgemini.overseer.services;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.simple.JSONObject;
 import org.springframework.stereotype.Repository;
+
+import com.capgemini.overseer.config.UrlConfig;
 import com.capgemini.overseer.drools.MasterEngine;
 import com.capgemini.overseer.entities.Rule;
 import com.capgemini.overseer.helpers.ParseRule;
@@ -55,12 +58,19 @@ public class RuleService implements IRuleService {
 		
 	}
 
-	public void delete(String ruleStr) {
+	public Boolean delete(String ruleStr) {
 		// TODO Auto-generated method stub
 		Rule rule = parseRule(ruleStr);
-		System.out.println("delete rule "+ rule);
+		return MasterEngine.getInstance().removeRule(rule);
 	}
-	
 
+	public JSONObject encodeUrlData() {
+		JSONObject obj = new JSONObject();
+		obj.put("BaseUrl", UrlConfig.getInstance().getProperty("urlApiBaseRule"));
+		obj.put("AddRuleUrl", UrlConfig.getInstance().getProperty("urlApiAddRule"));
+		obj.put("RemoveRuleUrl", UrlConfig.getInstance().getProperty("urlApiRemoveRule"));
+		System.out.println("data  : "+ obj.toJSONString());
+		return obj;
+	}
 
 }
