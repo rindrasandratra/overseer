@@ -25,8 +25,8 @@ public final class ConsumerMessageService {
 	private ConsumerMessageService() {
 	}
 
-	public void init(){
-		if (consumer == null){
+	public void init() {
+		if (consumer == null) {
 			try {
 				CreateConnectionFactory();
 				CreateDestinationQueue();
@@ -42,7 +42,7 @@ public final class ConsumerMessageService {
 	}
 
 	private void CreateConnectionFactory() throws JMSException {
-		if (connection == null){
+		if (connection == null) {
 			connectionFactory = new ActiveMQConnectionFactory(url);
 			connection = connectionFactory.createConnection();
 			connection.start();
@@ -57,10 +57,26 @@ public final class ConsumerMessageService {
 	}
 
 	private void CreateMessageConsumer() throws JMSException {
-		if (consumer == null){
+		if (consumer == null) {
 			consumer = session.createConsumer(destination);
 			consumer.setMessageListener(new MessageJMSListner());
 			System.out.println("Consumer created");
+		}
+	}
+
+	public void stopConsumerMessageService() {
+		try {
+			if (consumer != null) {
+				consumer.close();
+				connection.close();
+			}
+			connection = null;
+			session = null;
+			destination = null;
+			consumer = null;
+		} catch (JMSException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }

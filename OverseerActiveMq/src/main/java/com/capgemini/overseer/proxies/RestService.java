@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.capgemini.overseer.config.UrlConfig;
+import com.capgemini.overseer.drools.MasterEngine;
 import com.capgemini.overseer.entities.Rule;
 import com.capgemini.overseer.services.RuleService;
 
@@ -35,14 +36,28 @@ public class RestService {
 	public Boolean addRule(@RequestBody String ruleStr) {
 		return ruleService.addRule(ruleStr);
 	}
+	
+	@RequestMapping(value = "/countFact")
+	public long countFact(){
+		return MasterEngine.getInstance().countFact();
+	}
 
-	@RequestMapping(value = "/rule")
-	public ResponseEntity<List<Rule>> listAllRules() {
-		List<Rule> rules = ruleService.getAll();
+	@RequestMapping(value = "/isActive")
+	public boolean getStatus() {
+		return ruleService.getStatus();
+	}
+	
+	@RequestMapping(value = "/listRule")
+	public ResponseEntity<List<String>> listAllRules() {
+		List<String> rules = ruleService.getAll();
+		System.out.println("get list of rules");
 		if (rules.isEmpty()) {
-			return new ResponseEntity<List<Rule>>(HttpStatus.NO_CONTENT);
+			System.out.println("list of rules is empty");
+			return new ResponseEntity<List<String>>(HttpStatus.NO_CONTENT);
 		}
-		return new ResponseEntity<List<Rule>>(rules, HttpStatus.OK);
+		System.out.println("list of rules not empty");
+		System.out.println(new ResponseEntity<List<String>>(rules, HttpStatus.OK));
+		return new ResponseEntity<List<String>>(rules, HttpStatus.OK);
 	}
 
 	@RequestMapping(value = "/removeRule")
@@ -60,6 +75,21 @@ public class RestService {
 		} else {
 			return false;
 		}
+	}
+	
+	@RequestMapping(value = "/stop")
+	public boolean stopEngine(){
+		return ruleService.stopEngine();
+	}
+	
+	@RequestMapping(value = "/restart")
+	public boolean restartEngine(){
+		System.out.println("redémarrage du moteur");
+		if (stopEngine()){
+			System.out.println("le moteur a bien été arrété et va redémarrer");
+			return init();
+		}
+		return false;
 	}
 	
 	public void sendNotification(JSONObject responseJSON) {

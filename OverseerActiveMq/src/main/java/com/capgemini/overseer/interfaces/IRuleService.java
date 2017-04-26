@@ -2,13 +2,15 @@ package com.capgemini.overseer.interfaces;
 
 import java.util.List;
 
+import org.json.simple.JSONObject;
+
 import com.capgemini.overseer.entities.Rule;
 
 public interface IRuleService {
 	
 	Boolean initEngine();
 	
-	List<Rule> getAll();
+	List<String> getAll();
 
 	Rule get(Integer id);
 	

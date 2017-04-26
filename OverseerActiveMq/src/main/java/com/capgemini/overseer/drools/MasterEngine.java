@@ -2,6 +2,7 @@ package com.capgemini.overseer.drools;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +22,7 @@ import org.drools.runtime.KnowledgeSessionConfiguration;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.StatelessKnowledgeSession;
 import org.drools.runtime.conf.ClockTypeOption;
+import org.drools.runtime.rule.FactHandle;
 
 import com.capgemini.overseer.entities.LogMessage;
 import com.capgemini.overseer.entities.Response;
@@ -32,15 +34,15 @@ public final class MasterEngine{
 	static final MasterEngine instance = new MasterEngine();
 	static final KnowledgeBuilder kbuilderStateful = KnowledgeBuilderFactory.newKnowledgeBuilder();
 	static KnowledgeBase kbaseStateful;
-	static final KnowledgeBuilder kbuilderStateless = KnowledgeBuilderFactory.newKnowledgeBuilder();
-	static final KnowledgeBase kbaseStateless = KnowledgeBaseFactory.newKnowledgeBase();
+	//static KnowledgeBuilder kbuilderStateless = KnowledgeBuilderFactory.newKnowledgeBuilder();
+	static KnowledgeBase kbaseStateless = KnowledgeBaseFactory.newKnowledgeBase();
 	StatefulKnowledgeSession statefulSession;
 	static final StatelessKnowledgeSession statelessSession = kbaseStateless.newStatelessKnowledgeSession();
 	KnowledgeBaseConfiguration  config = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
 	KnowledgeSessionConfiguration configSession = KnowledgeBaseFactory.newKnowledgeSessionConfiguration();
 	SessionPseudoClock clock;
 	CountDownLatch latch = new CountDownLatch(1);
-	private Boolean isStarted = false;
+	private static Boolean isStarted = false;
 
 	public StatefulKnowledgeSession getStatefulSession() {
 		return statefulSession;
@@ -100,7 +102,7 @@ public final class MasterEngine{
 	}
 
 	public Boolean initEngine() {
-		kbuilderStateless.add(ResourceFactory.newClassPathResource("rules/evaluation_level.drl"), ResourceType.DRL);
+		//kbuilderStateless.add(ResourceFactory.newClassPathResource("rules/evaluation_level.drl"), ResourceType.DRL);
 
 		//statelessSession = kbaseStateless.newStatelessKnowledgeSession();
 		statelessSession.addEventListener(new TrackingAgendaListnerForStateLessSession());
@@ -111,13 +113,47 @@ public final class MasterEngine{
 		latch.countDown();
 
 		ConsumerMessageService.getInstance().init();
+		isStarted = true;
 		return true;
+	}
+	
+	public void removeAllFact(){
+		for (FactHandle fact : statefulSession.getFactHandles()) {
+			statefulSession.retract(fact);
+		}
+	}
+	
+	public boolean stopEngine(){
+		ConsumerMessageService.getInstance().stopConsumerMessageService();
+		removeAllRules();
+		removeAllFact();
+		statefulSession.dispose();
+		statefulSession.halt();
+		System.out.println("Engine has stopped");
+		isStarted = false;
+		return true;
+	}
+	
+	public void removeAllRules(){
+		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
+			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
+				kbaseStateless.removeRule(knowledgePackage.getName(), rule_.getName());
+			}
+		}
+		
+		for (KnowledgePackage knowledgePackage : statefulSession.getKnowledgeBase().getKnowledgePackages()) {
+			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
+				statefulSession.getKnowledgeBase().removeRule(knowledgePackage.getName(), rule_.getName());
+			}
+		}
 	}
 
 	public synchronized Boolean addRuleToStateLessSession(Rule rule) {
+		KnowledgeBuilder kbuilderStateless = KnowledgeBuilderFactory.newKnowledgeBuilder();
 		removeExistantRuleInStatelessSession(rule);
 		Resource myRule = ResourceFactory.newReaderResource((Reader) new StringReader(rule.getContent()));
 		System.out.println("rule to inject in stateless : "+ rule.getName());
+		kbuilderStateless = KnowledgeBuilderFactory.newKnowledgeBuilder(); 
 		kbuilderStateless.add(myRule, ResourceType.DRL);
 
 		if (kbuilderStateless.hasErrors()) {
@@ -127,7 +163,27 @@ public final class MasterEngine{
 		kbaseStateless.addKnowledgePackages(kbuilderStateless.getKnowledgePackages());
 		return true;
 	}
+	
+	
+	private List<String> getActiveRuleInStatelessSession(){
+		List<String> ruleNames = new ArrayList<String>();
+		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
+			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
+				ruleNames.add(rule_.getName());
+			}
+		}
+		return ruleNames;
+	}
 
+	private List<String> getActiveRuleInStatefulSession(){
+		List<String> ruleNames = new ArrayList<String>();
+		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
+			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
+				ruleNames.add(rule_.getName());
+			}
+		}
+		return ruleNames;
+	}
 
 	public synchronized Boolean addRuleToStateFulSession(Rule rule) {
 		removeExistantRuleInStatefulSession(rule);
@@ -159,14 +215,13 @@ public final class MasterEngine{
 			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
 				if (rule_.getName().equals(rule.getName())){
 					kbaseStateless.removeRule(knowledgePackage.getName(), rule.getName());
-					//statelessSession.
 					return true;
 				}
 			}
 		}
 		return false;
 	}
-
+	
 
 	synchronized public Boolean removeRule(Rule rule) {
 		if (removeExistantRuleInStatefulSession(rule) || removeExistantRuleInStatelessSession(rule)){
@@ -177,4 +232,15 @@ public final class MasterEngine{
 		return false;
 	}
 
+	public long countFact(){
+		return statefulSession.getFactCount();
+	}
+
+	public List<String> getActiveRule(){
+		List<String> ruleNames = new ArrayList<String>();
+		ruleNames.addAll(getActiveRuleInStatelessSession());
+		ruleNames.removeAll(getActiveRuleInStatefulSession());
+		ruleNames.addAll(getActiveRuleInStatefulSession());
+		return ruleNames;
+	}
 }

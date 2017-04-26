@@ -29,9 +29,8 @@ public class RuleService implements IRuleService {
 		return rule;
 	}
 
-	public List<Rule> getAll() {
-		List<Rule> rules = new ArrayList<Rule>();
-		return rules;
+	public List<String> getAll() {
+		return MasterEngine.getInstance().getActiveRule();
 	}
 
 	public Rule get(Integer id) {
@@ -67,10 +66,28 @@ public class RuleService implements IRuleService {
 	public JSONObject encodeUrlData() {
 		JSONObject obj = new JSONObject();
 		obj.put("BaseUrl", UrlConfig.getInstance().getProperty("urlApiBaseRule"));
-		obj.put("AddRuleUrl", UrlConfig.getInstance().getProperty("urlApiAddRule"));
-		obj.put("RemoveRuleUrl", UrlConfig.getInstance().getProperty("urlApiRemoveRule"));
 		System.out.println("data  : "+ obj.toJSONString());
 		return obj;
 	}
+	
+	public boolean stopEngine(){
+		return MasterEngine.getInstance().stopEngine();
+	}
+	
+	public boolean restartEngine(){
+		if (MasterEngine.getInstance().stopEngine()){
+			System.out.println("le moteur a bien été arrété et va redémarrer");
+			return MasterEngine.getInstance().initEngine();
+		}
+		return false;
+	}
+	
+	public long countFact(){
+		return MasterEngine.getInstance().countFact();
+	}
 
+	public boolean getStatus() {
+		return MasterEngine.getInstance().getIsStarted();
+	}
+	
 }
