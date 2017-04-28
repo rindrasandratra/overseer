@@ -27,11 +27,6 @@ public class TrackingAgendaListnerForStateLessSession extends DefaultAgendaEvent
 		}
 	}
 	
-	@Override
-	public void beforeActivationFired(BeforeActivationFiredEvent event) {
-		Rule rule = event.getActivation().getRule();
-		System.out.println("Rule beforeActivationFired(BeforeActivationFiredEvent event) " + rule.getName());
-	}
 
 	public Boolean checkIfFactIsAlreadyInSession(final LogMessage instance) {
 		Collection<Object> objects = MasterEngine.getInstance().getStatefulSession().getObjects(new ObjectFilter() {

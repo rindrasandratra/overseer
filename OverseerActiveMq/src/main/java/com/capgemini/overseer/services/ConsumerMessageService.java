@@ -1,5 +1,9 @@
 package com.capgemini.overseer.services;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -43,9 +47,11 @@ public final class ConsumerMessageService {
 
 	private void CreateConnectionFactory() throws JMSException {
 		if (connection == null) {
+			System.out.println("trying to create connection factory");
 			connectionFactory = new ActiveMQConnectionFactory(url);
 			connection = connectionFactory.createConnection();
 			connection.start();
+			System.out.println("connection has started");
 		}
 		if (session == null)
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -78,5 +84,20 @@ public final class ConsumerMessageService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public static boolean testConnection(){
+		try {
+			System.out.println("try to ping");
+			InetAddress.getByName(url).isReachable(1000);
+			return true;
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
 	}
 }

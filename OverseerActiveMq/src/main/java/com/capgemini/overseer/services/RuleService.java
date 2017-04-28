@@ -2,6 +2,7 @@ package com.capgemini.overseer.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Timestamp;
 
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Repository;
@@ -17,9 +18,7 @@ public class RuleService implements IRuleService {
 	
 
 	public Boolean initEngine() {
-		// TODO Auto-generated method stub
 		System.out.println("master engine started");
-		System.out.println("MasterEngine.getInstance() " + MasterEngine.getInstance());
 		return MasterEngine.getInstance().initEngine();
 	}
 	
@@ -33,10 +32,6 @@ public class RuleService implements IRuleService {
 		return MasterEngine.getInstance().getActiveRule();
 	}
 
-	public Rule get(Integer id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	public Boolean addRule(String ruleStr) {
 		return addRule(parseRule(ruleStr));
@@ -50,11 +45,6 @@ public class RuleService implements IRuleService {
 		}
 		System.out.println("rule not added : "+ rule.getName() );
 		return false;
-	}
-
-	public void update(Rule rule) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	public Boolean delete(String ruleStr) {
@@ -80,6 +70,14 @@ public class RuleService implements IRuleService {
 			return MasterEngine.getInstance().initEngine();
 		}
 		return false;
+	}
+	
+	public String getlastLogMessageReceivedTime(){
+		Timestamp lastTime = MasterEngine.getInstance().getLastLogMessageReceivedTime();
+		if (lastTime == null)
+			return "";
+		else 
+			return lastTime.toString();
 	}
 	
 	public long countFact(){

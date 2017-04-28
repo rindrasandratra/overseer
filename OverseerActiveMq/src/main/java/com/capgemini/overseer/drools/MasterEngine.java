@@ -2,6 +2,7 @@ package com.capgemini.overseer.drools;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -25,8 +26,8 @@ import org.drools.runtime.conf.ClockTypeOption;
 import org.drools.runtime.rule.FactHandle;
 
 import com.capgemini.overseer.entities.LogMessage;
-import com.capgemini.overseer.entities.Response;
 import com.capgemini.overseer.entities.Rule;
+import com.capgemini.overseer.entities.TimerLogListner;
 import com.capgemini.overseer.services.ConsumerMessageService;
 
 public final class MasterEngine{
@@ -43,6 +44,8 @@ public final class MasterEngine{
 	SessionPseudoClock clock;
 	CountDownLatch latch = new CountDownLatch(1);
 	private static Boolean isStarted = false;
+	private static Timestamp lastLogMessageReceivedTime;
+	//static TimerLogListner timerLogListner = new TimerLogListner();
 
 	public StatefulKnowledgeSession getStatefulSession() {
 		return statefulSession;
@@ -66,6 +69,10 @@ public final class MasterEngine{
 		return isStarted;
 	}
 
+	public Timestamp getLastLogMessageReceivedTime() {
+		return lastLogMessageReceivedTime;
+	}
+
 	public Boolean addRule(Rule rule) {
 
 		try {
@@ -86,6 +93,8 @@ public final class MasterEngine{
 			e.printStackTrace();
 		}
 		System.out.println("log added to stateless session" + logMessage.getMessageID());
+		lastLogMessageReceivedTime = new Timestamp(System.currentTimeMillis());
+		//timerLogListner.setDatelog(lastLogMessageReceivedTime);
 		statelessSession.execute(logMessage);
 	}
 
@@ -102,6 +111,7 @@ public final class MasterEngine{
 	}
 
 	public Boolean initEngine() {
+		//timerLogListner.run();
 		//kbuilderStateless.add(ResourceFactory.newClassPathResource("rules/evaluation_level.drl"), ResourceType.DRL);
 
 		//statelessSession = kbaseStateless.newStatelessKnowledgeSession();
@@ -243,4 +253,5 @@ public final class MasterEngine{
 		ruleNames.addAll(getActiveRuleInStatefulSession());
 		return ruleNames;
 	}
+	
 }

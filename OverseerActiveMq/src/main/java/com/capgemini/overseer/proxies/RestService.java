@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import com.capgemini.overseer.config.UrlConfig;
 import com.capgemini.overseer.drools.MasterEngine;
 import com.capgemini.overseer.entities.Rule;
+import com.capgemini.overseer.services.ConsumerMessageService;
 import com.capgemini.overseer.services.RuleService;
 
 @RestController
@@ -45,6 +46,11 @@ public class RestService {
 	@RequestMapping(value = "/isActive")
 	public boolean getStatus() {
 		return ruleService.getStatus();
+	}
+	
+	@RequestMapping(value = "/checkActiveMQ")
+	public boolean checkActiveMQ() {
+		return ConsumerMessageService.testConnection();
 	}
 	
 	@RequestMapping(value = "/listRule")
@@ -80,6 +86,11 @@ public class RestService {
 	@RequestMapping(value = "/stop")
 	public boolean stopEngine(){
 		return ruleService.stopEngine();
+	}
+	
+	@RequestMapping(value = "/lastLogDate")
+	public String getlastLogMessageReceivedTime(){
+		return ruleService.getlastLogMessageReceivedTime();
 	}
 	
 	@RequestMapping(value = "/restart")
