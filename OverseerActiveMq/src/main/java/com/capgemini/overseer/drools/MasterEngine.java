@@ -24,16 +24,18 @@ import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.StatelessKnowledgeSession;
 import org.drools.runtime.conf.ClockTypeOption;
 import org.drools.runtime.rule.FactHandle;
+import org.json.simple.JSONArray;
 
 import com.capgemini.overseer.entities.LogMessage;
 import com.capgemini.overseer.entities.Rule;
 import com.capgemini.overseer.entities.TimerLogListner;
 import com.capgemini.overseer.services.ConsumerMessageService;
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 
 public final class MasterEngine{
 
 	static final MasterEngine instance = new MasterEngine();
-	static final KnowledgeBuilder kbuilderStateful = KnowledgeBuilderFactory.newKnowledgeBuilder();
+	//static final KnowledgeBuilder kbuilderStateful = KnowledgeBuilderFactory.newKnowledgeBuilder();
 	static KnowledgeBase kbaseStateful;
 	//static KnowledgeBuilder kbuilderStateless = KnowledgeBuilderFactory.newKnowledgeBuilder();
 	static KnowledgeBase kbaseStateless = KnowledgeBaseFactory.newKnowledgeBase();
@@ -173,29 +175,9 @@ public final class MasterEngine{
 		kbaseStateless.addKnowledgePackages(kbuilderStateless.getKnowledgePackages());
 		return true;
 	}
-	
-	
-	private List<String> getActiveRuleInStatelessSession(){
-		List<String> ruleNames = new ArrayList<String>();
-		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
-			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
-				ruleNames.add(rule_.getName());
-			}
-		}
-		return ruleNames;
-	}
-
-	private List<String> getActiveRuleInStatefulSession(){
-		List<String> ruleNames = new ArrayList<String>();
-		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
-			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
-				ruleNames.add(rule_.getName());
-			}
-		}
-		return ruleNames;
-	}
 
 	public synchronized Boolean addRuleToStateFulSession(Rule rule) {
+		KnowledgeBuilder kbuilderStateful = KnowledgeBuilderFactory.newKnowledgeBuilder();
 		removeExistantRuleInStatefulSession(rule);
 		Resource myRule = ResourceFactory.newReaderResource((Reader) new StringReader(rule.getContent()));
 		System.out.println("rule to inject in stateful : "+ rule.getName());
@@ -206,6 +188,28 @@ public final class MasterEngine{
 		}
 		statefulSession.getKnowledgeBase().addKnowledgePackages(kbuilderStateful.getKnowledgePackages());
 		return true;
+	}
+	
+	private List<String> getActiveRuleInStatelessSession(){
+		List<String> ruleNames = new ArrayList<String>();
+		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
+			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
+				ruleNames.add(rule_.getName());
+			}
+		}
+		System.out.println("rules in stateless : "+ JSONArray.toJSONString(ruleNames));
+		return ruleNames;
+	}
+
+	private List<String> getActiveRuleInStatefulSession(){
+		List<String> ruleNames = new ArrayList<String>();
+		for (KnowledgePackage knowledgePackage : kbaseStateless.getKnowledgePackages()) {
+			for (org.drools.definition.rule.Rule rule_ : knowledgePackage.getRules()) {
+				ruleNames.add(rule_.getName());
+			}
+		}
+		System.out.println("rules in stateful : "+ JSONArray.toJSONString(ruleNames));
+		return ruleNames;
 	}
 	
 	private Boolean removeExistantRuleInStatefulSession(Rule rule){
@@ -234,8 +238,10 @@ public final class MasterEngine{
 	
 
 	synchronized public Boolean removeRule(Rule rule) {
-		if (removeExistantRuleInStatefulSession(rule) || removeExistantRuleInStatelessSession(rule)){
-			System.out.println("########## La regle : "+ rule.getName() + " a ete supprimee ##########");
+		boolean removeStatelessOk = removeExistantRuleInStatelessSession(rule);
+		boolean removeStatefulOk = removeExistantRuleInStatefulSession(rule);
+		if (removeStatelessOk || removeStatefulOk){
+			System.out.println("########## La regle : "+ rule.getName() + " a ete supprimee ########## : en stateteless : "+ removeStatelessOk+ ", en stateful : "+ removeStatefulOk);
 			return true;
 		}
 		System.out.println("########## La regle : "+ rule.getName() + " n'a pas ete supprimee ##########");
