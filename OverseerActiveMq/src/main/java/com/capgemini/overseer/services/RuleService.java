@@ -88,4 +88,10 @@ public class RuleService implements IRuleService {
 		return MasterEngine.getInstance().getIsStarted();
 	}
 	
+	public long getRuntimeMemoryUsage(){
+		System.out.println("Runtime.getRuntime().totalMemory() "+ Runtime.getRuntime().totalMemory());
+		System.out.println("Runtime.getRuntime().freeMemory() "+ Runtime.getRuntime().freeMemory());
+		return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+	}
+	
 }

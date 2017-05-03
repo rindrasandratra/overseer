@@ -53,6 +53,11 @@ public class RestService {
 		return ConsumerMessageService.getInstance().testConnection();
 	}
 	
+	@RequestMapping(value = "/memoryUsage")
+	public long getMemoryUsage(){
+		return ruleService.getRuntimeMemoryUsage();
+	}
+	
 	@RequestMapping(value = "/listRule")
 	public ResponseEntity<List<String>> listAllRules() {
 		List<String> rules = ruleService.getAll();
