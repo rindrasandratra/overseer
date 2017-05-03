@@ -89,8 +89,6 @@ public class RuleService implements IRuleService {
 	}
 	
 	public long getRuntimeMemoryUsage(){
-		System.out.println("Runtime.getRuntime().totalMemory() "+ Runtime.getRuntime().totalMemory());
-		System.out.println("Runtime.getRuntime().freeMemory() "+ Runtime.getRuntime().freeMemory());
 		return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 	}
 	
