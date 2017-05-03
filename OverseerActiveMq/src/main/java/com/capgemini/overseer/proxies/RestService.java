@@ -50,7 +50,7 @@ public class RestService {
 	
 	@RequestMapping(value = "/checkActiveMQ")
 	public boolean checkActiveMQ() {
-		return ConsumerMessageService.testConnection();
+		return ConsumerMessageService.getInstance().testConnection();
 	}
 	
 	@RequestMapping(value = "/listRule")

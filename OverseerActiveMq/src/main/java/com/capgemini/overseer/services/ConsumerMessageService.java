@@ -10,9 +10,16 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.transport.TransportListener;
+
+import com.capgemini.overseer.entities.ActiveMqConnectionListner;
 import com.capgemini.overseer.entities.MessageJMSListner;
 
 public final class ConsumerMessageService {
@@ -23,10 +30,20 @@ public final class ConsumerMessageService {
 	static String queue_name = "logstash_log";
 	Destination destination;
 	Message message;
-	Connection connection;
+	//Connection connection;
+	ActiveMQConnection connection;
 	MessageConsumer consumer;
+	Boolean state = false;
 
 	private ConsumerMessageService() {
+	}
+
+	public Boolean getState() {
+		return state;
+	}
+
+	public void setState(Boolean state) {
+		this.state = state;
 	}
 
 	public void init() {
@@ -49,8 +66,10 @@ public final class ConsumerMessageService {
 		if (connection == null) {
 			System.out.println("trying to create connection factory");
 			connectionFactory = new ActiveMQConnectionFactory(url);
-			connection = connectionFactory.createConnection();
+			connection = (ActiveMQConnection) connectionFactory.createConnection();
+			state = true;
 			connection.start();
+			connection.addTransportListener(new ActiveMqConnectionListner());
 			System.out.println("connection has started");
 		}
 		if (session == null)
@@ -86,18 +105,10 @@ public final class ConsumerMessageService {
 		}
 	}
 
-	public static boolean testConnection(){
-		try {
-			System.out.println("try to ping");
-			InetAddress.getByName(url).isReachable(1000);
-			return true;
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
+	public boolean testConnection(){
+		Boolean res = false;
+		if (state == true)
+			res = connection.isStarted();
+		return res;
 	}
 }

@@ -113,6 +113,7 @@ public final class MasterEngine{
 	}
 
 	public Boolean initEngine() {
+		
 		//timerLogListner.run();
 		//kbuilderStateless.add(ResourceFactory.newClassPathResource("rules/evaluation_level.drl"), ResourceType.DRL);
 
