@@ -107,7 +107,7 @@ public final class ConsumerMessageService {
 
 	public boolean testConnection(){
 		Boolean res = false;
-		if (state == true)
+		if ((state == true) && (connection != null))
 			res = connection.isStarted();
 		return res;
 	}

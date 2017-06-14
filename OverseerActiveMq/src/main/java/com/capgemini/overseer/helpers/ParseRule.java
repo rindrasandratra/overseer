@@ -27,7 +27,12 @@ public class ParseRule {
 			ruleObj.setId(Integer.valueOf(id));
 			ruleObj.setName((String) jsonObject.get("Name"));
 			ruleObj.setIsStateful((Boolean)jsonObject.get("isStateful"));
-			setContentRule((String) jsonObject.get("Content"));
+			if(ruleObj.getIsStateful()){
+				setContentRule((String) jsonObject.get("ContentStateful"));
+			}
+			else{
+				setContentRule((String) jsonObject.get("ContentStateless"));
+			}
 			SetPackageName();
 		} catch (ParseException e) {
 			e.printStackTrace();

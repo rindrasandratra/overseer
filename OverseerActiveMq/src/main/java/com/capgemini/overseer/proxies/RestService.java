@@ -1,6 +1,5 @@
 package com.capgemini.overseer.proxies;
 
-import java.util.Base64;
 import java.util.List;
 
 import org.json.simple.JSONObject;
@@ -14,7 +13,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.capgemini.overseer.config.UrlConfig;
 import com.capgemini.overseer.drools.MasterEngine;
-import com.capgemini.overseer.entities.Rule;
 import com.capgemini.overseer.services.ConsumerMessageService;
 import com.capgemini.overseer.services.RuleService;
 
